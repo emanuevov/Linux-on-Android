@@ -60,29 +60,34 @@ install_linux() {
 
     echo "Configuring inside $DISTRO..."
 
-    proot-distro login "$DISTRO" -- /bin/bash <<EOF
+    proot-distro.login "$DISTRO" -- /bin/bash <<EOF
 apt update && apt upgrade -y
 apt install -y sudo adduser passwd apt-utils dialog tzdata
 
 adduser --gecos "" "$USERNAME"
-passwd -d "$USERNAME"
+passwd -d "$USERNAME" 2>/dev/null || true
 
 echo "$USERNAME ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
 if [[ "$INSTALL_GUI" =~ ^[yY]$ ]]; then
-    apt install -y lxde lxterminal tightvncserver
+    apt install -y lxde lxterminal tightvncserver || apt install -y tightvncserver
 fi
 EOF
 
     if [[ "$INSTALL_GUI" =~ ^[yY]$ ]]; then
     proot-distro login "$DISTRO" -- /bin/bash <<EOF
+if ! command -v vncserver >/dev/null; then
+    echo "VNC installation failed. Skipping VNC setup."
+    exit 0
+fi
+
 sudo -u "$USERNAME" bash <<EOD
 mkdir -p "\$HOME/.vnc"
 echo "$VNC_PASSWD" | vncpasswd -f > "\$HOME/.vnc/passwd"
 chmod 600 "\$HOME/.vnc/passwd"
 
-vncserver :1
-vncserver -kill :1
+vncserver :1 || true
+vncserver -kill :1 || true
 
 cat > "\$HOME/.vnc/xstartup" <<'EOS'
 #!/bin/bash

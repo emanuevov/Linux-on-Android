@@ -60,7 +60,7 @@ install_linux() {
 
     echo "Configuring inside $DISTRO..."
 
-    proot-distro.login "$DISTRO" -- /bin/bash <<EOF
+    proot-distro login "$DISTRO" -- /bin/bash <<EOF
 apt update && apt upgrade -y
 apt install -y sudo adduser passwd apt-utils dialog tzdata
 

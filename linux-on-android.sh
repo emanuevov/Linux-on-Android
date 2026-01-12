@@ -1,141 +1,154 @@
 #!/bin/bash
 set -e
 
-echo "👋 Welcome to Linux on Android Manager"
+CONFIG_DIR="$PREFIX/etc/linux-on-android"
+mkdir -p "$CONFIG_DIR"
 
-# ----------------------------
-# Step 0: Update Termux
-# ----------------------------
-echo "🔄 Updating Termux packages..."
-apt update && apt upgrade -y
+menu() {
+    echo "=== Linux on Android Manager ==="
+    echo "1) Install a Linux distro"
+    echo "2) Uninstall a specific distro"
+    echo "3) Uninstall ALL distros"
+    echo "4) Exit"
+    read -p "Choose an option: " CHOICE
 
-# ----------------------------
-# Step 1: Install proot-distro if missing
-# ----------------------------
-if ! command -v proot-distro &> /dev/null; then
-    echo "📦 Installing proot-distro..."
-    apt install proot-distro -y
-fi
+    case "$CHOICE" in
+        1) install_linux ;;
+        2) uninstall_one ;;
+        3) uninstall_all ;;
+        4) exit 0 ;;
+        *) echo "Invalid choice"; menu ;;
+    esac
+}
 
-# ----------------------------
-# Step 2: Choose Action
-# ----------------------------
-echo "What do you want to do?"
-echo "1) Install a Linux distro"
-echo "2) Uninstall a Linux distro"
-read -p "Enter 1 or 2: " ACTION
+install_linux() {
+    apt update && apt upgrade -y
 
-# ----------------------------
-# INSTALLATION FLOW
-# ----------------------------
-if [[ "$ACTION" == "1" ]]; then
-    echo "📋 Available Linux distributions:"
-    proot-distro list
-
-    read -p "Enter the distro you want to install (e.g., debian, ubuntu): " DISTRO
-    read -p "Enter the username you want to create inside Linux: " LINUX_USER
-    read -p "Do you want to install a desktop environment (LXDE + VNC)? (y/N): " INSTALL_GUI
-
-    if [[ "$INSTALL_GUI" =~ ^[yY]$ ]]; then
-        echo "Available resolutions: 1024x768, 1280x720, 1920x1080"
-        read -p "Enter desired VNC resolution (default 1920x1080): " VNC_RES
-        VNC_RES=${VNC_RES:-1920x1080}
+    if ! command -v proot-distro &> /dev/null; then
+        apt install proot-distro -y
     fi
 
-    echo "--------------------------------"
-    echo "Linux Distro: $DISTRO"
-    echo "Username: $LINUX_USER"
-    echo "Install Desktop: $INSTALL_GUI"
-    [[ -n "$VNC_RES" ]] && echo "VNC Resolution: $VNC_RES"
-    echo "--------------------------------"
-    read -p "Proceed with installation? (y/N): " CONFIRM
-    [[ ! "$CONFIRM" =~ ^[yY]$ ]] && echo "Aborting." && exit 0
+    echo "Available distros:"
+    proot-distro list
 
-    echo "🚀 Installing $DISTRO..."
+    read -p "Enter distro to install (e.g., debian): " DISTRO
+    read -p "Enter username to create: " USERNAME
+    read -p "Install LXDE desktop? (y/N): " INSTALL_GUI
+    read -p "VNC resolution (default 1920x1080): " RES
+    RES=${RES:-1920x1080}
+
+    echo "Installing $DISTRO..."
     proot-distro install "$DISTRO"
 
-    echo "🎉 Installation complete!"
-    echo "Configuring user inside $DISTRO..."
+    echo "Configuring inside $DISTRO..."
 
-    # Essential packages + user creation
     proot-distro login "$DISTRO" -- /bin/bash <<EOF
 apt update && apt upgrade -y
+apt install -y sudo adduser passwd apt-utils dialog tzdata
 
-# Install essential packages
-apt install -y sudo passwd adduser apt-utils dialog tzdata
+adduser --gecos "" $USERNAME
+echo "$USERNAME ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
-echo "👤 Creating user '$LINUX_USER'..."
-adduser --gecos "" "$LINUX_USER"
-usermod -aG sudo "$LINUX_USER"
-
-# Add aliases to the user's .bashrc
-echo "📌 Adding aliases..."
-cat >> /home/$LINUX_USER/.bashrc <<EOD
-alias login='proot-distro login $DISTRO'
-EOD
-
-# Add VNC aliases only if GUI is selected
 if [[ "$INSTALL_GUI" =~ ^[yY]$ ]]; then
-cat >> /home/$LINUX_USER/.bashrc <<EOD
-alias startvnc='vncserver -geometry $VNC_RES :1'
-alias stopvnc='vncserver -kill :1'
-EOD
+    apt install -y lxde lxterminal tightvncserver
 fi
-
-chown $LINUX_USER:$LINUX_USER /home/$LINUX_USER/.bashrc
 EOF
 
-    # GUI Setup
     if [[ "$INSTALL_GUI" =~ ^[yY]$ ]]; then
-        echo "🖥 Setting up LXDE + VNC..."
-
-        proot-distro login "$DISTRO" -- /bin/bash <<EOF
-apt update
-apt install -y lxde lxterminal tightvncserver
-
-# Run VNC setup as the new user
-sudo -u $LINUX_USER bash <<EOD
+    proot-distro login "$DISTRO" -- /bin/bash <<EOF
+sudo -u $USERNAME bash <<EOD
 vncserver :1
 vncserver -kill :1
 
-mkdir -p /home/$LINUX_USER/.vnc
-cat > /home/$LINUX_USER/.vnc/xstartup <<'EOS'
+mkdir -p /home/$USERNAME/.vnc
+cat > /home/$USERNAME/.vnc/xstartup <<'EOS'
 #!/bin/bash
 xrdb \$HOME/.Xresources
-startlxde &
+exec startlxde &
 EOS
 
-chmod +x /home/$LINUX_USER/.vnc/xstartup
+chmod +x /home/$USERNAME/.vnc/xstartup
+
+echo "alias startvnc='vncserver -geometry $RES :1'" >> /home/$USERNAME/.bashrc
+echo "alias stopvnc='vncserver -kill :1'" >> /home/$USERNAME/.bashrc
 EOD
-
 EOF
-
-        echo "✅ Desktop setup complete!"
     fi
 
-    echo "🎉 Installation finished!"
-    echo "Login with: proot-distro login $DISTRO"
-    [[ "$INSTALL_GUI" =~ ^[yY]$ ]] && echo "Start desktop with: startvnc"
+    echo "Saving config..."
+    cat > "$CONFIG_DIR/$DISTRO.conf" <<EOF
+DISTRO=$DISTRO
+USERNAME=$USERNAME
+GUI=$INSTALL_GUI
+RESOLUTION=$RES
+EOF
 
-# ----------------------------
-# UNINSTALL FLOW
-# ----------------------------
-elif [[ "$ACTION" == "2" ]]; then
-    echo "📋 Installed Linux distributions:"
-    proot-distro list
+    echo "Creating Termux alias for $DISTRO..."
 
-    read -p "Enter the distro you want to uninstall: " DISTRO_REMOVE
-    read -p "⚠️ Are you sure you want to remove '$DISTRO_REMOVE'? (y/N): " CONFIRM_REMOVE
-    [[ ! "$CONFIRM_REMOVE" =~ ^[yY]$ ]] && echo "Aborting." && exit 0
+    ALIAS_CMD="proot-distro login $DISTRO -- su - $USERNAME"
 
-    echo "🗑 Removing $DISTRO_REMOVE..."
-    proot-distro remove "$DISTRO_REMOVE"
-    echo "✅ $DISTRO_REMOVE removed!"
+    if [[ "$INSTALL_GUI" =~ ^[yY]$ ]]; then
+        ALIAS_CMD="$ALIAS_CMD -c 'startvnc; bash'"
+    else
+        ALIAS_CMD="$ALIAS_CMD -c 'bash'"
+    fi
 
-    read -p "Remove proot-distro too? (y/N): " REMOVE_PROOT
-    [[ "$REMOVE_PROOT" =~ ^[yY]$ ]] && apt remove proot-distro -y && echo "✅ proot-distro removed!"
+    echo "alias launch-$DISTRO=\"$ALIAS_CMD\"" >> $HOME/.bashrc
 
-else
-    echo "❌ Invalid option. Exiting."
-    exit 1
-fi
+    echo "=== Installation complete! ==="
+    echo "Login with: proot-distro login $DISTRO --"
+    echo "Switch user: su - $USERNAME"
+    [[ "$INSTALL_GUI" =~ ^[yY]$ ]] && echo "Start desktop: startvnc"
+    echo "Quick launch: launch-$DISTRO"
+}
+
+uninstall_one() {
+    echo "Installed distros:"
+    ls "$CONFIG_DIR" | sed 's/.conf//'
+
+    read -p "Enter distro to uninstall: " DISTRO
+
+    CONFIG_FILE="$CONFIG_DIR/$DISTRO.conf"
+
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        echo "No config found for $DISTRO"
+        exit 1
+    fi
+
+    read -p "Remove distro '$DISTRO'? (y/N): " CONFIRM
+    [[ ! "$CONFIRM" =~ ^[yY]$ ]] && exit 0
+
+    proot-distro remove "$DISTRO"
+    rm -f "$CONFIG_FILE"
+
+    sed -i "/alias launch-$DISTRO=/d" $HOME/.bashrc
+
+    echo "Removed $DISTRO"
+}
+
+uninstall_all() {
+    echo "This will remove ALL installed distros."
+    read -p "Are you sure? (y/N): " CONFIRM
+    [[ ! "$CONFIRM" =~ ^[yY]$ ]] && exit 0
+
+    for FILE in "$CONFIG_DIR"/*.conf; do
+        [[ -e "$FILE" ]] || continue
+        source "$FILE"
+        echo "Removing $DISTRO..."
+        proot-distro remove "$DISTRO"
+        rm -f "$FILE"
+    done
+
+    sed -i "/alias launch-/d" $HOME/.bashrc
+
+    echo "All distros removed."
+
+    read -p "Remove proot-distro as well? (y/N): " REMOVE_PROOT
+    if [[ "$REMOVE_PROOT" =~ ^[yY]$ ]]; then
+        apt remove -y proot-distro
+    fi
+
+    echo "Cleanup complete."
+}
+
+menu

@@ -8,7 +8,7 @@
 
 ## Overview
 
-**Linux on Android** is a fully automated, color‑coded script that installs, configures, and manages full Linux distributions inside **Termux** using **proot-distro**, all without requiring root access.
+**Linux on Android** is a fully automated script that installs, configures, and manages full Linux distributions inside **Termux** using **proot-distro**, all without requiring root access.
 
 This tool is designed to make Linux‑on‑Android setups **reproducible**, **beginner‑friendly**, and **frictionless**, while giving old Android devices a second life as:
 

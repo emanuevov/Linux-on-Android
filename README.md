@@ -6,41 +6,40 @@
 
 ---
 
-## Overview
+## 🚀 Overview
 
 **Linux on Android** is a fully automated script that installs, configures, and manages full Linux distributions inside **Termux** using **proot-distro**, all without requiring root access.
 
-This tool is designed to make Linux‑on‑Android setups **reproducible**, **beginner‑friendly**, and **frictionless**, while giving old Android devices a second life as:
+This tool makes Linux‑on‑Android setups:
 
-- Lightweight Linux servers  
-- Development sandboxes  
-- Learning environments  
-- Automation nodes  
-- Personal experimentation machines  
+- **Reproducible**  
+- **Beginner‑friendly**  
+- **Frictionless**  
+- **Safe**  
+- **Perfect for repurposing old devices**
 
-The script handles everything automatically:
+Use it to turn any Android phone or tablet into:
 
-- Distro installation  
-- User creation  
-- Sudo configuration  
-- Optional LXDE desktop setup  
-- VNC configuration  
-- Automatic cleanup of stale VNC lock files  
-- Clean uninstall (single distro or all)  
+- A lightweight Linux server  
+- A portable development machine  
+- A learning environment  
+- An automation node  
+- A personal experimentation sandbox  
 
 No aliases. No manual steps. No guesswork.
 
-👉 **[Manual Installation Guide](docs/MANUAL-INSTALL.md)** For users who prefer to install everything manually.
+👉 **Prefer manual installation?**  
+Check out the **[Manual Installation Guide](docs/MANUAL-INSTALL.md)**.
 
 ---
 
-## Features
+## ✨ Features
 
 ### ✔ Fully automated installation  
-No interactive prompts inside the distro. Everything is handled cleanly.
+No interactive prompts inside the distro, everything is handled cleanly.
 
 ### ✔ Optional LXDE desktop + VNC  
-Choose whether to install a GUI.  
+Install a GUI with one choice.  
 VNC is configured automatically with a working `xstartup`.
 
 ### ✔ Automatic VNC lock cleanup  
@@ -57,52 +56,52 @@ You control how you start/stop VNC and how you log in.
 
 ---
 
-## Requirements
+## 📦 Requirements
 
-- Android 8.0+  
-- Termux (from F‑Droid recommended)  
-- 4–6 GB free storage  
+- Android **8.0+**  
+- **Termux** (F‑Droid recommended)  
+- **4–6 GB** free storage  
 - Internet connection  
-- Optional: VNC viewer app (RealVNC, bVNC, etc.)
+- Optional: VNC viewer (RealVNC, bVNC, etc.)
 
 ---
 
-## Installation
+## 🛠 Installation
 
-1. Install **Termux** from F-Droid:  
+1. Install **Termux** from F‑Droid:  
    https://f-droid.org/packages/com.termux/
 
-2. Update Termux packages and install Git:
+2. Update Termux and install Git:
 
    ```bash
    apt update && apt upgrade -y
    apt install git -y
    ```
 
-3. Clone this repository:
+3. Clone the repository:
 
-```bash
-git clone https://github.com/uzairmukadam/linux-on-android.git
-cd linux-on-android
-```
+   ```bash
+   git clone https://github.com/uzairmukadam/linux-on-android.git
+   cd linux-on-android
+   ```
 
 4. Make the script executable:
 
-```bash
-chmod +x linux-on-android.sh
-```
+   ```bash
+   chmod +x linux-on-android.sh
+   ```
 
 5. Run the script:
 
-```bash
-./linux-on-android.sh
-```
+   ```bash
+   ./linux-on-android.sh
+   ```
 
 6. Follow the on‑screen prompts.
 
 ---
 
-## What the Script Does
+## 🧩 What the Script Does
 
 ### 1. Installs your chosen Linux distro  
 Supports any distro available through `proot-distro`.
@@ -132,7 +131,7 @@ Remove one distro or all of them.
 
 ---
 
-## Using Your Linux Environment
+## 🖥 Using Your Linux Environment
 
 ### Login to your distro:
 
@@ -148,7 +147,7 @@ su - <username>
 
 ---
 
-## Using VNC (if GUI installed)
+## 🖼 Using VNC (if GUI installed)
 
 ### Start VNC:
 
@@ -172,7 +171,7 @@ Password: `1234` (default)
 
 ---
 
-## How to Cleanly Shut Down Everything
+## 🔌 How to Cleanly Shut Down Everything
 
 ### 1. Stop the VNC desktop  
 ```bash
@@ -189,7 +188,7 @@ exit
 exit
 ```
 
-### 4. Kill any leftover proot processes (optional)  
+### 4. Kill leftover proot processes (optional)  
 From Termux:
 
 ```bash
@@ -203,11 +202,9 @@ exit
 
 Then swipe Termux away from recent apps.
 
-This fully shuts down the Linux environment.
-
 ---
 
-## Uninstalling
+## 🗑 Uninstalling
 
 ### Remove a single distro:
 
@@ -225,7 +222,7 @@ You can also optionally remove `proot-distro`.
 
 ---
 
-## Supported Distributions
+## 🐧 Supported Distributions
 
 Any distro supported by `proot-distro`, including:
 
@@ -238,7 +235,7 @@ Any distro supported by `proot-distro`, including:
 
 ---
 
-## Known Limitations
+## ⚠ Known Limitations
 
 - No GPU acceleration (Android does not expose GPU to proot)  
 - No systemd  
@@ -247,7 +244,89 @@ Any distro supported by `proot-distro`, including:
 
 ---
 
-## Closing Thoughts
+## ❓ FAQ
+
+### **Q: Does this give me real hardware access (GPU, kernel modules, etc.)?**  
+No. proot runs in userspace and cannot access kernel‑level hardware like GPU, DRM, or kernel modules.
+
+### **Q: Why can’t I use systemd?**  
+proot does not support PID 1 or kernel‑level init systems. Use supervisord or run services manually.
+
+### **Q: Why do I need `su - <username>` instead of `su <username>`?**  
+`su -` loads a full login environment (PATH, HOME, DBus, configs).  
+`su` does not, and it breaks desktops and VNC.
+
+### **Q: Why does VNC show “No session for pid XXXX”?**  
+This usually means an LXDE component failed to attach to the session.  
+Check:
+
+```
+~/.cache/lxsession/LXDE/run.log
+```
+
+### **Q: Can I install XFCE, KDE, or GNOME?**  
+Yes, but they are heavy and may perform poorly on older devices. LXDE is recommended.
+
+### **Q: Can I run Docker or LXC?**  
+No, they require kernel features unavailable in proot.
+
+### **Q: Can I use this on a non‑ARM device?**  
+Yes. proot-distro supports ARM, ARM64, and x86_64 depending on Termux architecture.
+
+---
+
+## 🛠 Troubleshooting
+
+### **VNC won’t start / port already in use**
+Run:
+
+```bash
+rm -f /tmp/.X1-lock /tmp/.X11-unix/X1
+```
+
+Then:
+
+```bash
+vncserver :1
+```
+
+### **LXDE shows “Cannot start pid XXXX”**
+Check:
+
+```
+~/.cache/lxsession/LXDE/run.log
+```
+
+### **Desktop is slow**
+Try:
+
+- Lower resolution: `vncserver -geometry 1280x720 :1`
+- Disable compositing in LXDE
+- Use a lighter distro (Alpine, Debian minimal)
+
+### **proot-distro command not found**
+Install it:
+
+```bash
+apt install proot-distro -y
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions, ideas, and improvements are welcome!  
+Feel free to:
+
+- Open an issue  
+- Submit a pull request  
+- Suggest features  
+- Share creative use‑cases  
+
+---
+
+## ❤️ Closing Thoughts
 
 This project is built for people who love repurposing old hardware, reducing e‑waste, and exploring what’s possible with minimal resources.  
-If you have ideas, improvements, or want to contribute — feel free to open an issue or reach out.
+If you have ideas, improvements, or want to contribute, feel free to reach out or open an issue.
+

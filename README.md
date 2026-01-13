@@ -6,86 +6,68 @@
 
 ---
 
-## 📌 Overview
+## Overview
 
-**Linux on Android** is a powerful, beginner‑friendly automation script that installs, configures, and manages full Linux distributions on Android devices using **Termux** and **proot-distro**, all **without requiring root access**.
+**Linux on Android** is a fully automated, color‑coded script that installs, configures, and manages full Linux distributions inside **Termux** using **proot-distro**, all without requiring root access.
 
-This tool revives older Android phones and tablets by turning them into lightweight Linux machines. It provides a reversible, customizable, and user‑friendly environment that runs entirely in userspace. Whether you're learning Linux, coding on the go, or building a portable dev machine, this script handles everything for you.
+This tool is designed to make Linux‑on‑Android setups **reproducible**, **beginner‑friendly**, and **frictionless**, while giving old Android devices a second life as:
+
+- Lightweight Linux servers  
+- Development sandboxes  
+- Learning environments  
+- Automation nodes  
+- Personal experimentation machines  
+
+The script handles everything automatically:
+
+- Distro installation  
+- User creation  
+- Sudo configuration  
+- Optional LXDE desktop setup  
+- VNC configuration  
+- Automatic cleanup of stale VNC lock files  
+- Clean uninstall (single distro or all)  
+
+No aliases. No manual steps. No guesswork.
 
 👉 **[Manual Installation Guide](docs/MANUAL-INSTALL.md)** For users who prefer to install everything manually.
 
 ---
 
-## ✨ Key Features
+## Features
 
-### 🐧 Multi‑Distro Support
-Install and manage **multiple Linux distributions simultaneously**, each with its own configuration:
+### ✔ Fully automated installation  
+No interactive prompts inside the distro. Everything is handled cleanly.
 
-- **Debian** (recommended)
-- **Ubuntu**
-- **Arch Linux**
-- **Alpine**
-- **Fedora**
-- And any other distro supported by `proot-distro`
+### ✔ Optional LXDE desktop + VNC  
+Choose whether to install a GUI.  
+VNC is configured automatically with a working `xstartup`.
 
-### 👤 User Creation
-- Automatically creates a secure non‑root user  
-- Grants `sudo` privileges  
-- Ensures all essential packages (`sudo`, `adduser`, `passwd`, etc.) are installed  
+### ✔ Automatic VNC lock cleanup  
+Fixes the common `Cannot start VNC:1` issue by removing stale lock files.
 
-### 🖥️ Optional Desktop Environment
-- Install **LXDE** for a lightweight graphical desktop  
-- Access via **VNC**  
-- Auto‑generated aliases:
-  - `startvnc` — launch desktop  
-  - `stopvnc` — stop desktop  
+### ✔ Safe sudo setup  
+Creates a non‑root user with passwordless sudo via `/etc/sudoers.d`.
 
-### 🧩 Per‑Distro Configuration
-Each installation generates a config file stored in:
+### ✔ Clean uninstall  
+Remove one distro or wipe all distros + configs.
 
-```
-$PREFIX/etc/linux-on-android/<distro>.conf
-```
-
-This enables:
-
-- Clean uninstall per distro  
-- Accurate tracking of usernames, GUI settings, and VNC resolution  
-- Support for multiple simultaneous installations  
-
-### 🗑️ Robust Uninstallation
-- Uninstall a **specific distro**  
-- Or uninstall **all distros at once**  
-- Optional removal of `proot-distro`  
-- Automatic cleanup of config files  
-
-### ⚡ Optimized for Low‑End Devices
-- Works on older phones/tablets  
-- Lightweight desktop  
-- Minimal resource usage  
+### ✔ No aliases  
+You control how you start/stop VNC and how you log in.
 
 ---
 
-## ⚠️ Disclaimer
+## Requirements
 
-- No root access is required; your Android system remains untouched.
-- Performance varies by device hardware.
-- Desktop environments via VNC may consume additional battery.
-- Use responsibly and at your own discretion.
-
----
-
-## 📦 Requirements
-
-- Android **8.0+** (ARM64 strongly recommended)
-- **Termux** (from F-Droid)
-- **4–6 GB** free storage
-- Stable internet connection
-- Optional: VNC client (RealVNC, bVNC, etc.)
+- Android 8.0+  
+- Termux (from F‑Droid recommended)  
+- 4–6 GB free storage  
+- Internet connection  
+- Optional: VNC viewer app (RealVNC, bVNC, etc.)
 
 ---
 
-## 🚀 Installation
+## Installation
 
 1. Install **Termux** from F-Droid:  
    https://f-droid.org/packages/com.termux/
@@ -97,120 +79,175 @@ This enables:
    apt install git -y
    ```
 
-3. Clone the repository:
+3. Clone this repository:
 
-   ```bash
-   git clone https://github.com/uzairmukadam/linux-on-android.git
-   cd linux-on-android
-   ```
+```bash
+git clone https://github.com/uzairmukadam/linux-on-android.git
+cd linux-on-android
+```
 
 4. Make the script executable:
 
-   ```bash
-   chmod +x linux-on-android.sh
-   ```
+```bash
+chmod +x linux-on-android.sh
+```
 
 5. Run the script:
 
-   ```bash
-   ./linux-on-android.sh
-   ```
+```bash
+./linux-on-android.sh
+```
 
-6. Follow the interactive prompts to:
-   - Select a Linux distribution  
-   - Create a username  
-   - Choose whether to install LXDE + VNC  
-   - Pick a VNC resolution  
-   - Complete the guided setup  
+6. Follow the on‑screen prompts.
 
 ---
 
-## 🖥️ Using the Desktop (VNC)
+## What the Script Does
 
-If you installed LXDE, start the desktop with:
+### 1. Installs your chosen Linux distro  
+Supports any distro available through `proot-distro`.
 
-```bash
-startvnc
+### 2. Creates a non‑root user  
+Passwordless login, safe sudo access.
+
+### 3. Optional LXDE desktop setup  
+If selected, the script installs:
+
+- LXDE  
+- TightVNCServer  
+- A working `xstartup`  
+- A VNC password  
+- Automatic lock‑file cleanup  
+- A test VNC session to initialize configs  
+
+### 4. Saves configuration  
+Each installed distro gets a config file in:
+
+```
+$PREFIX/etc/linux-on-android/<distro>.conf
 ```
 
-Stop it with:
+### 5. Provides clean uninstall options  
+Remove one distro or all of them.
+
+---
+
+## Using Your Linux Environment
+
+### Login to your distro:
 
 ```bash
-stopvnc
+proot-distro login <distro> --
 ```
 
-Connect using any VNC viewer to:
+### Switch to your user:
+
+```bash
+su - <username>
+```
+
+---
+
+## Using VNC (if GUI installed)
+
+### Start VNC:
+
+```bash
+vncserver -geometry 1920x1080 :1
+```
+
+### Stop VNC:
+
+```bash
+vncserver -kill :1
+```
+
+### Connect from Android VNC viewer:
 
 ```
 localhost:5901
 ```
 
----
-
-## 🗑️ Uninstalling Linux Distros
-
-### Remove a specific distro
-1. Run the script:
-
-   ```bash
-   ./linux-on-android.sh
-   ```
-
-2. Select **Uninstall a specific distro**  
-3. Choose the distro  
-4. Confirm removal  
-
-### Remove ALL distros
-1. Run:
-
-   ```bash
-   ./linux-on-android.sh
-   ```
-
-2. Select **Uninstall ALL distros**  
-3. Confirm  
-4. Optionally remove `proot-distro`  
-
-All associated config files are removed automatically.
+Password: `1234` (default)
 
 ---
 
-## 🐧 Supported Distributions
+## How to Cleanly Shut Down Everything
 
-- **Debian** (recommended for stability)
-- **Ubuntu**
-- **Arch Linux**
-- **Alpine Linux**
-- **Fedora**
-- And many others supported by `proot-distro`
+### 1. Stop the VNC desktop  
+```bash
+vncserver -kill :1
+```
+
+### 2. Exit the user session  
+```bash
+exit
+```
+
+### 3. Exit the distro  
+```bash
+exit
+```
+
+### 4. Kill any leftover proot processes (optional)  
+From Termux:
+
+```bash
+pkill -9 -f proot
+```
+
+### 5. Close Termux  
+```bash
+exit
+```
+
+Then swipe Termux away from recent apps.
+
+This fully shuts down the Linux environment.
 
 ---
 
-## ⚠️ Known Limitations
+## Uninstalling
 
-- No **systemd** support (proot limitation)
-- No hardware GPU acceleration
-- GUI sessions may drain battery faster
-- Some packages may require manual configuration
+### Remove a single distro:
 
----
+```bash
+./linux-on-android.sh
+```
 
-## ❤️ Why This Project Exists
+Choose: **Uninstall a specific distro**
 
-Android devices often outlive their intended purpose, yet their hardware remains surprisingly capable.  
-This project aims to:
+### Remove all distros:
 
-- Extend the life of older phones/tablets  
-- Provide a portable Linux development environment  
-- Offer a safe, beginner-friendly way to explore Linux  
-- Enable experimentation without modifying the Android system  
+Choose: **Uninstall ALL distros**
 
-If you enjoy tinkering, learning, or building on the go, this tool gives you a clean, flexible Linux environment right in your pocket.
+You can also optionally remove `proot-distro`.
 
 ---
 
-## 📬 Contributions
+## Supported Distributions
 
-Contributions, improvements, and suggestions are always welcome.  
-Feel free to open an issue or submit a pull request.
+Any distro supported by `proot-distro`, including:
 
+- Debian  
+- Ubuntu  
+- Arch Linux  
+- Fedora  
+- Alpine  
+- Void Linux  
+
+---
+
+## Known Limitations
+
+- No GPU acceleration (Android does not expose GPU to proot)  
+- No systemd  
+- VNC performance depends on device hardware  
+- Some desktop apps may require additional packages  
+
+---
+
+## Closing Thoughts
+
+This project is built for people who love repurposing old hardware, reducing e‑waste, and exploring what’s possible with minimal resources.  
+If you have ideas, improvements, or want to contribute — feel free to open an issue or reach out.
